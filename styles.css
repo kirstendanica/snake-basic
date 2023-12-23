@@ -1,85 +1,77 @@
-/* ==========================================================================
-   General | Reset
-   ========================================================================== */
-
+/* Global Styles /
+/ Resets default browser styling */
 body {
   margin: 0;
   padding: 0;
   font-family: 'Arial', sans-serif;
-  background-color: #f4f3f2;
+  background-color: #3f4e72;
   overflow-x: hidden;
-}
-
-/* ==========================================================================
-     Header
-   ========================================================================== */
-
-.header {
+  }
+  
+  /* Header /
+  / Styles for header container */
+  .header {
   text-align: center;
   padding: 20px;
-  background-color: #333;
+  background-color: #b3b3b3ec;
   color: #f4f3f2;
-}
-
-/* ==========================================================================
-     Game Container
-   ========================================================================== */
-
-.game-container {
+  }
+  
+  /* Game Container /
+  / Holds game canvas centered on page */
+  .game-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-}
-
-/* ==========================================================================
-     Canvas
-   ========================================================================== */
-
-.game-canvas {
-  border: 1px solid #5c789c;
-}
-
-/* ==========================================================================
-     Button
-   ========================================================================== */
-
-.button {
+  }
+  
+  /* Game Canvas /
+  / Styles for actual canvas element */
+  .game-canvas {
+  border: 1px solid #b3b3b3ec;
+  }
+  
+  /* Button /
+  / Shared button styling */
+  .button {
   padding: 10px 20px;
   margin: 10px;
-  background-color: #546e7a;
+  background-color: #455a64;
   color: #f4f3f2;
   border: none;
   border-radius: 5px;
   cursor: pointer;
-}
-
-/* ==========================================================================
-     Footer
-   ========================================================================== */
-
-.footer {
+  }
+  
+  /* Footer /
+  / Styles for footer container */
+  .footer {
   text-align: center;
   padding: 10px;
-  background-color: #333;
+  background-color: #3f4e72;
   color: #f4f3f2;
-}
-
-@keyframes pulsate {
+  }
+  
+  /* Keyframe Animation /
+  / Pulsating animation effect */
+  @keyframes pulsate {
   0% {
-    transform: scale(1);
-    opacity: 1;
+  transform: scale(1);
+  opacity: 1;
   }
   50% {
-    transform: scale(0.9);
-    opacity: 0.7;
+  transform: scale(0.9);
+  opacity: 0.7;
   }
   100% {
-    transform: scale(1);
-    opacity: 1;
+  transform: scale(1);
+  opacity: 1;
   }
-}
-
-.header h1 {
+  }
+  
+  /* Header H1 Animation /
+  / Applying pulsate animation to header h1 */
+  .header h1 {
   animation: pulsate 2s ease-in-out infinite;
-}
+  }
