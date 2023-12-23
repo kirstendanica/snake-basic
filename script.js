@@ -125,17 +125,32 @@ class Renderer {
 
     drawSnake() {
         this.game.snake.forEach((segment, index) => {
-            const color = index === 0 ? "#546e7a" : (index === this.game.snake.length - 1 ? "#90a4ae" : "#78909c");
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
-            this.ctx.strokeStyle = "black";
-            this.ctx.strokeRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
+          const color = index === 0 ? "#546e7a" : (index === this.game.snake.length - 1 ? "#90a4ae" : "#78909c");
+          this.ctx.fillStyle = color;
+          this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
+          this.ctx.strokeStyle = "black";
+          this.ctx.strokeRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
+    
+          // Simulate wooden deck for ship
+          if (index % 2 === 0) {
+            this.ctx.fillStyle = "#8d6e63";
+            this.ctx.fillStyle = "#a1887f";
+          }
+          this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
         });
-    }
-
-    drawFood() {
+      }
+    
+      drawFood() {
         this.ctx.fillStyle = "#e57373";
+        const treasureChestImage = "url('trsure-chst.png')";
+        this.ctx.fillStyle = treasureChestImage ? "transparent" : "#e57373";
         this.ctx.fillRect(this.game.food.x * this.tileSize, this.game.food.y * this.tileSize, this.tileSize, this.tileSize);
+    
+        if (treasureChestImage) {
+            const img = new Image();
+            img.src = 'trsure-chst.png';
+            this.ctx.drawImage(img, this.game.food.x * this.tileSize, this.game.food.y * this.tileSize, this.tileSize, this.tileSize);
+        }
     }
 
     drawScores() {
