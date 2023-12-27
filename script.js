@@ -32,6 +32,7 @@ class Game {
         this.restartGame();
         this.highestScore = 0;
         this.direction = DIRECTIONS.RIGHT;
+        this.highestScore = parseInt(localStorage.getItem('highestScore')) || 0;
     }
 
     restartGame() {
@@ -153,8 +154,14 @@ class Game {
     updateScoreBoard() {
         const scoreBoard = document.getElementById('scoreBoard');
         scoreBoard.textContent = `Score: ${this.score} | Highest Score: ${this.highestScore}`;
+     
+        // If current score is higher than user's highest score, update highest score via localStorage
+        if (this.score > this.highestScore) {
+            this.highestScore = this.score;
+            localStorage.setItem('highestScore', this.highestScore);
+        }
+     }
     }
-}
 
 // Renderer class
 class Renderer {
@@ -207,8 +214,8 @@ class Renderer {
         this.ctx.font = "16px Arial";
         this.ctx.fillText(`Score: ${this.game.score}`, 10, 20);
         this.ctx.fillText(`Highest Score: ${this.game.highestScore}`, 10, 40);
+     }
     }
-}
 
 // UserInput class
 class UserInput {
