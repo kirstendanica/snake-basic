@@ -24,6 +24,10 @@ const FOOD_CHANCES = {
 const treasureChestImage = new Image();
 treasureChestImage.src = 'trsure-chst.png';
 
+// Preload sound effects
+const eatSound = new Audio('snake-eats.mp3');
+const gameOverSound = new Audio('gmover-sound.wav');
+
 // Game class
 class Game {
     constructor(gridSize, tileSize) {
@@ -45,6 +49,7 @@ class Game {
     }
 
     handleGameOver() {
+        gameOverSound.play();
         alert("Game Over! Your snake collided with its own tail. Better luck next time!");
         gameApp.stop();
         this.restartGame();
@@ -77,6 +82,7 @@ class Game {
 
         // Check for collision with defined boundary (falling off boat!)
         if (this.isCollidingWithBoundary(head)) {
+            gameOverSound.play();
             const playAgain = confirm("You fell into the ocean! Unfortunately, you're -not- a water snake... Do you want to start over?");
             playAgain ? this.restartGame() : this.handleGameOver();
             return;
@@ -84,6 +90,7 @@ class Game {
 
         // Check for collision with food
         if (this.isCollidingWithFood()) {
+            eatSound.play();
             this.food = this.getRandomFoodPosition();
             this.snake.push({});
         } else {
