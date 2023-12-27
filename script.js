@@ -20,6 +20,10 @@ const FOOD_CHANCES = {
     LIGHT_RED: 0.6
 };
 
+// Other constants
+const DEFAULT_GAME_SPEED = 100;
+const CANVAS_BACKGROUND_COLOR = "#ffffff";
+
 // Preload treasure chest img
 const treasureChestImage = new Image();
 treasureChestImage.src = 'trsure-chst.png';
@@ -27,6 +31,9 @@ treasureChestImage.src = 'trsure-chst.png';
 // Preload sound effects
 const eatSound = new Audio('snake-eats.mp3');
 const gameOverSound = new Audio('gmover-sound.wav');
+// Background music
+const backgroundMusic = new Audio('happy-pirate-accordion.wav');
+backgroundMusic.loop = true;
 
 // Game class
 class Game {
@@ -34,8 +41,6 @@ class Game {
         this.gridSize = gridSize;
         this.tileSize = tileSize;
         this.restartGame();
-        this.highestScore = 0;
-        this.direction = DIRECTIONS.RIGHT;
         this.highestScore = parseInt(localStorage.getItem('highestScore')) || 0;
     }
 
@@ -56,7 +61,7 @@ class Game {
     }
 
     moveSnake() {
-        const head = Object.assign({}, this.snake[0]);
+        const head = { ...this.snake[0] };
 
         // Check for collision with the snake tail
         if (this.isCollidingWithSnakeTail(head)) {
@@ -65,6 +70,19 @@ class Game {
         }
 
         // Update head position based on direction
+        this.updateHeadPosition(head);
+
+        // Check for collision with defined boundary (falling off boat!)
+        if (this.isCollidingWithBoundary(head)) {
+            this.handleBoundaryCollision();
+            return;
+        }
+
+        // Check for collision with food
+        this.handleFoodCollision(head);
+    }
+
+    updateHeadPosition(head) {
         switch (this.direction) {
             case DIRECTIONS.UP:
                 head.y -= 1;
@@ -79,16 +97,15 @@ class Game {
                 head.x += 1;
                 break;
         }
+    }
 
-        // Check for collision with defined boundary (falling off boat!)
-        if (this.isCollidingWithBoundary(head)) {
-            gameOverSound.play();
-            const playAgain = confirm("You fell into the ocean! Unfortunately, you're -not- a water snake... Do you want to start over?");
-            playAgain ? this.restartGame() : this.handleGameOver();
-            return;
-        }
+    handleBoundaryCollision() {
+        gameOverSound.play();
+        const playAgain = confirm("You fell into the ocean! Unfortunately, you're -not- a water snake... Do you want to start over?");
+        playAgain ? this.restartGame() : this.handleGameOver();
+    }
 
-        // Check for collision with food
+    handleFoodCollision(head) {
         if (this.isCollidingWithFood()) {
             eatSound.play();
             this.food = this.getRandomFoodPosition();
@@ -107,25 +124,28 @@ class Game {
     isCollidingWithFood() {
         if (this.snake[0].x === this.food.x && this.snake[0].y === this.food.y) {
             // Update score based points via food
-            switch (this.food.type) {
-                case "BLUE":
-                    this.score += 5;
-                    break;
-                case "GREEN":
-                    this.score += 20;
-                    break;
-                case "LIGHT_RED":
-                    this.score += 50;
-                    break;
-                case "TREASURE_CHEST":
-                    this.score += 100;
-                    break;
-            }
-
+            this.updateScoreByFoodType();
             this.updateScoreBoard();
             return true;
         }
         return false;
+    }
+
+    updateScoreByFoodType() {
+        switch (this.food.type) {
+            case "BLUE":
+                this.score += 5;
+                break;
+            case "GREEN":
+                this.score += 20;
+                break;
+            case "LIGHT_RED":
+                this.score += 50;
+                break;
+            case "TREASURE_CHEST":
+                this.score += 100;
+                break;
+        }
     }
 
     isCollidingWithSnakeTail(head) {
@@ -161,14 +181,14 @@ class Game {
     updateScoreBoard() {
         const scoreBoard = document.getElementById('scoreBoard');
         scoreBoard.textContent = `Score: ${this.score} | Highest Score: ${this.highestScore}`;
-     
+
         // If current score is higher than user's highest score, update highest score via localStorage
         if (this.score > this.highestScore) {
             this.highestScore = this.score;
             localStorage.setItem('highestScore', this.highestScore);
         }
-     }
     }
+}
 
 // Renderer class
 class Renderer {
@@ -184,36 +204,41 @@ class Renderer {
 
     drawSnake() {
         this.game.snake.forEach((segment, index) => {
-            const color = index === 0 ? "#546e7a" : (index === this.game.snake.length - 1 ? "#90a4ae" : "#78909c");
-            this.ctx.fillStyle = color;
-            this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
-            this.ctx.strokeStyle = "black";
-            this.ctx.strokeRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
-
-            // Simulate wooden deck for ship
-            if (index % 2 === 0) {
-                this.ctx.fillStyle = "#a1887f"; // Fixed styling error
-            }
-            this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
+            this.drawSnakeSegment(segment, index);
+            this.drawWoodenDeck(segment, index);
         });
     }
 
-    drawFood() {
-        switch (this.game.food.type) {
-            case "BLUE":
-                this.ctx.fillStyle = FOOD_COLORS.BLUE;
-                break;
-            case "GREEN":
-                this.ctx.fillStyle = FOOD_COLORS.GREEN;
-                break;
-            case "LIGHT_RED":
-                this.ctx.fillStyle = FOOD_COLORS.LIGHT_RED;
-                break;
-            case "TREASURE_CHEST":
-                this.ctx.drawImage(treasureChestImage, this.game.food.x * this.tileSize, this.game.food.y * this.tileSize, this.tileSize, this.tileSize);
-                return;
+    drawSnakeSegment(segment, index) {
+        const color = this.getSnakeSegmentColor(index);
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
+        this.ctx.strokeStyle = "black";
+        this.ctx.strokeRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
+    }
+
+    getSnakeSegmentColor(index) {
+        return index === 0 ? "#546e7a" : (index === this.game.snake.length - 1 ? "#90a4ae" : "#78909c");
+    }
+
+    drawWoodenDeck(segment, index) {
+        if (index % 2 === 0) {
+            this.ctx.fillStyle = "#a1887f";
+            this.ctx.fillRect(segment.x * this.tileSize, segment.y * this.tileSize, this.tileSize, this.tileSize);
         }
-        this.ctx.fillRect(this.game.food.x * this.tileSize, this.game.food.y * this.tileSize, this.tileSize, this.tileSize);
+    }
+
+    drawFood() {
+        const { type, x, y } = this.game.food;
+
+        switch (type) {
+            case "TREASURE_CHEST":
+                this.ctx.drawImage(treasureChestImage, x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
+                break;
+            default:
+                this.ctx.fillStyle = FOOD_COLORS[type];
+                this.ctx.fillRect(x * this.tileSize, y * this.tileSize, this.tileSize, this.tileSize);
+        }
     }
 
     drawScores() {
@@ -221,8 +246,8 @@ class Renderer {
         this.ctx.font = "16px Arial";
         this.ctx.fillText(`Score: ${this.game.score}`, 10, 20);
         this.ctx.fillText(`Highest Score: ${this.game.highestScore}`, 10, 40);
-     }
     }
+}
 
 // UserInput class
 class UserInput {
@@ -233,27 +258,32 @@ class UserInput {
 
     bindEvents() {
         document.addEventListener("keydown", (e) => {
-            const directions = {
-                ArrowUp: DIRECTIONS.UP,
-                ArrowDown: DIRECTIONS.DOWN,
-                ArrowLeft: DIRECTIONS.LEFT,
-                ArrowRight: DIRECTIONS.RIGHT
-            };
-
-            // Prevent snake from moving in the opposite direction as default
-            if (directions[e.key]) {
-                const newDirection = directions[e.key];
-                const { direction } = this.game;
-                if (
-                    (direction === DIRECTIONS.UP && newDirection !== DIRECTIONS.DOWN) ||
-                    (direction === DIRECTIONS.DOWN && newDirection !== DIRECTIONS.UP) ||
-                    (direction === DIRECTIONS.LEFT && newDirection !== DIRECTIONS.RIGHT) ||
-                    (direction === DIRECTIONS.RIGHT && newDirection !== DIRECTIONS.LEFT)
-                ) {
-                    this.game.direction = newDirection;
-                }
-            }
+            this.handleKeyPress(e);
         });
+    }
+
+    handleKeyPress(event) {
+        const directions = {
+            ArrowUp: DIRECTIONS.UP,
+            ArrowDown: DIRECTIONS.DOWN,
+            ArrowLeft: DIRECTIONS.LEFT,
+            ArrowRight: DIRECTIONS.RIGHT
+        };
+
+        const newDirection = directions[event.key];
+        if (newDirection && this.isValidDirection(newDirection)) {
+            this.game.direction = newDirection;
+        }
+    }
+
+    isValidDirection(newDirection) {
+        const { direction } = this.game;
+        return (
+            (direction === DIRECTIONS.UP && newDirection !== DIRECTIONS.DOWN) ||
+            (direction === DIRECTIONS.DOWN && newDirection !== DIRECTIONS.UP) ||
+            (direction === DIRECTIONS.LEFT && newDirection !== DIRECTIONS.RIGHT) ||
+            (direction === DIRECTIONS.RIGHT && newDirection !== DIRECTIONS.LEFT)
+        );
     }
 }
 
@@ -268,10 +298,24 @@ class GameApp {
         this.game = new Game(this.gridSize, this.tileSize);
         this.renderer = new Renderer(this.ctx, this.tileSize, this.game);
         this.userInput = new UserInput(this.game);
-        this.gameSpeed = 100;
+        this.gameSpeed = DEFAULT_GAME_SPEED;
+
+        // Define and bind first interaction handler
+        this.handleFirstInteraction = () => {
+            // Play background music
+            backgroundMusic.play();
+            // Remove the event listeners to prevent multiple triggers
+            document.removeEventListener('click', this.handleFirstInteraction);
+            document.removeEventListener('keydown', this.handleFirstInteraction);
+        };
+
+        // Event listeners to trigger background music via 'click' and 'keydown'
+        document.addEventListener('click', this.handleFirstInteraction);
+        document.addEventListener('keydown', this.handleFirstInteraction);
     }
 
     start() {
+        backgroundMusic.play();
         this.gameInterval = setInterval(() => this.gameLoop(), this.gameSpeed);
     }
 
